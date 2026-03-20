@@ -15,6 +15,9 @@ piper-tts>=1.4
 # Optional: Spotify
 spotipy>=2.23
 
+# Optional: X (Twitter) posting
+tweepy>=4.14
+
 # Optional: RSS
 feedparser>=6.0
 
