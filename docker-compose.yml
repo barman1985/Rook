@@ -1,0 +1,9 @@
+services:
+  rook:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./rook.db:/app/rook.db
+      - ./tts_models:/app/tts_models
+      - ./rook/skills/community:/app/rook/skills/community

@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+venv/
+.venv/
+
+# Environment
+.env
+*.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data
+*.db
+*.sqlite3
+
+# Logs
+logs/
+*.log
+
+# Secrets
+credentials.json
+token.json
+*.pem
+*.key
+
+# Skills community (user-installed)
+rook/skills/community/*
+!rook/skills/community/.gitkeep
+
+# TTS models (large files)
+tts_models/
+
+# Backups
+backups/
