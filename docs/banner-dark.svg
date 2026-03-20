@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 120" width="480" height="120">
+  <!-- Icon -->
+  <rect x="10" y="10" width="100" height="100" rx="20" fill="#1a1a1a"/>
+  <g transform="translate(60, 20)">
+    <rect x="-18" y="0" width="9" height="16" fill="#f97316"/>
+    <rect x="-4.5" y="0" width="9" height="16" fill="#f97316"/>
+    <rect x="9" y="0" width="9" height="16" fill="#f97316"/>
+    <rect x="-21" y="19" width="42" height="5" fill="#f97316"/>
+    <polygon points="-15,28 -11,55 11,55 15,28" fill="#f97316"/>
+    <polygon points="-12,59 -21,66 21,66 12,59" fill="#f97316"/>
+    <rect x="-23" y="70" width="46" height="7" fill="#f97316"/>
+  </g>
+  <!-- Wordmark (light for dark backgrounds) -->
+  <text x="130" y="68" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="52" font-weight="600" fill="#f0f0f0">Rook</text>
+  <text x="132" y="92" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="14" font-weight="400" fill="#f97316" letter-spacing="3">STRATEGIC AI</text>
+</svg>

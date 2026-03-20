@@ -1,10 +1,43 @@
-# ♜ Rook
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/banner-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="docs/banner.svg">
+    <img alt="Rook" src="docs/banner.svg" width="420">
+  </picture>
+</p>
 
-**Your strategic AI advantage.**
+<p align="center">
+  <strong>Your strategic AI advantage.</strong><br>
+  <sub>Open-source personal AI assistant in Telegram</sub>
+</p>
+
+<p align="center">
+  <a href="https://github.com/barman1985/Rook/stargazers"><img src="https://img.shields.io/github/stars/barman1985/Rook?style=flat&color=f97316" alt="Stars"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-f97316" alt="License"></a>
+  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.11+-f97316" alt="Python"></a>
+  <a href="https://github.com/barman1985/Rook/issues"><img src="https://img.shields.io/github/issues/barman1985/Rook?color=f97316" alt="Issues"></a>
+  <a href="https://github.com/sponsors/barman1985"><img src="https://img.shields.io/badge/sponsor-♥-f97316" alt="Sponsor"></a>
+</p>
+
+<p align="center">
+  <a href="#quick-start">Quick start</a> •
+  <a href="#features">Features</a> •
+  <a href="#creating-a-skill">Create a skill</a> •
+  <a href="#architecture">Architecture</a> •
+  <a href="CONTRIBUTING.md">Contribute</a>
+</p>
+
+---
 
 Rook is an open-source personal AI assistant that lives in Telegram. It doesn't just answer questions — it manages your calendar, triages your email, controls your music, remembers your preferences, and proactively keeps you on track.
 
 > *"Like having a chief of staff in your pocket."*
+
+<!-- TODO: Add demo GIF here
+<p align="center">
+  <img src="docs/demo.gif" width="360" alt="Rook demo">
+</p>
+-->
 
 ---
 
@@ -174,6 +207,8 @@ MIT — see [LICENSE](LICENSE).
 ---
 
 <p align="center">
-  <strong>♜ Rook — your strategic advantage</strong><br>
-  <sub>Built with Claude by Anthropic</sub>
+  <img src="docs/logo.svg" width="48" alt="Rook">
+  <br>
+  <strong>Rook — your strategic advantage</strong><br>
+  <sub>Built with <a href="https://anthropic.com">Claude</a> by Anthropic</sub>
 </p>
