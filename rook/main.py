@@ -52,12 +52,14 @@ def main():
     # Register notification handler (event bus listener)
     import rook.services.notifications  # noqa: F401 — registers @bus.on handlers
 
-    # Start proactive scheduler
-    from rook.services.scheduler import start_scheduler
-    start_scheduler()
-
-    # Start Telegram bot
+    # Start Telegram bot (scheduler starts inside its async context via post_init)
     app = create_app()
+
+    async def _on_startup(application):
+        from rook.services.scheduler import start_scheduler
+        start_scheduler()
+
+    app.post_init = _on_startup
     logger.info("Telegram bot ready — polling for messages")
     app.run_polling(drop_pending_updates=True)
 
