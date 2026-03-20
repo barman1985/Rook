@@ -1,0 +1,15 @@
+[Unit]
+Description=Rook AI Assistant
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/rook
+ExecStart=/opt/rook/venv/bin/python3 -m rook.main
+Restart=on-failure
+RestartSec=10
+Environment=PATH=/opt/rook/venv/bin:/usr/local/bin:/usr/bin
+
+[Install]
+WantedBy=multi-user.target
