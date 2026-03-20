@@ -49,6 +49,13 @@ def main():
     skills = load_skills()
     logger.info(f"Skills: {', '.join(skills.keys())}")
 
+    # Register notification handler (event bus listener)
+    import rook.services.notifications  # noqa: F401 — registers @bus.on handlers
+
+    # Start proactive scheduler
+    from rook.services.scheduler import start_scheduler
+    start_scheduler()
+
     # Start Telegram bot
     app = create_app()
     logger.info("Telegram bot ready — polling for messages")
