@@ -87,7 +87,15 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Configure
+### Configure (interactive wizard)
+
+```bash
+python -m rook.setup
+```
+
+The wizard guides you through everything — API keys, optional integrations (Google, Spotify, TV, X), and installs dependencies. Takes about 2 minutes.
+
+Or configure manually:
 
 ```bash
 cp .env.example .env
