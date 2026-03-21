@@ -45,3 +45,5 @@ tts_models/
 
 # Backups
 backups/
+*.txt
+!requirements.txt
