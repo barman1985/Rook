@@ -202,7 +202,7 @@ Rook is free and open-source. If it saves you time, consider supporting developm
 
 - ⭐ [Star this repo](https://github.com/barman1985/Rook)
 - 💖 [GitHub Sponsors](https://github.com/sponsors/barman1985)
-- ☕ [Buy me a coffee](https://buymeacoffee.com/rook)
+- ☕ [Buy me a coffee](https://buymeacoffee.com/rook_ai)
 
 **Rook Insiders** — get early access to new features by becoming a sponsor ($15+/month).
 
