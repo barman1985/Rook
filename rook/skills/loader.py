@@ -73,6 +73,12 @@ def _load_skill_module(path: Path, category: str):
             logger.debug(f"Skipping disabled skill: {skill.name}")
             return
 
+        # Check dependencies
+        deps_ok, deps_missing = skill.check_dependencies()
+        if not deps_ok:
+            logger.warning(f"Skill {skill.name} disabled — missing: {', '.join(deps_missing)}")
+            return
+
         _loaded_skills[skill.name] = skill
 
         # Register tools

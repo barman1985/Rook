@@ -36,9 +36,11 @@ token.json
 *.pem
 *.key
 
-# Skills community (user-installed)
+# Skills community (user-installed, but keep shipped examples)
 rook/skills/community/*
 !rook/skills/community/.gitkeep
+!rook/skills/community/__init__.py
+!rook/skills/community/homeassistant_skill.py
 
 # TTS models (large files)
 tts_models/

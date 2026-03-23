@@ -21,6 +21,7 @@ Creating a skill:
 
 import logging
 from abc import ABC
+from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -45,6 +46,42 @@ class Skill(ABC):
     description: str = ""
     version: str = "1.0"
     enabled: bool = True
+
+    # Dependency declarations — override in subclass
+    requires_env: list[str] = []     # ["HASS_URL", "HASS_TOKEN"]
+    requires_pip: list[str] = []     # ["aiohttp", "websockets"]
+
+    def check_dependencies(self) -> tuple[bool, list[str]]:
+        """Validate all dependencies. Returns (ok, [missing])."""
+        missing = []
+
+        # Check env vars
+        import os
+        for var in self.requires_env:
+            if not os.environ.get(var, ""):
+                # Also check config
+                from rook.core.config import cfg
+                env_file = Path(cfg.base_dir) / ".env"
+                found = False
+                if env_file.exists():
+                    for line in env_file.read_text().splitlines():
+                        if line.strip().startswith(var + "="):
+                            val = line.partition("=")[2].strip()
+                            if val:
+                                found = True
+                                break
+                if not found:
+                    missing.append(f"env:{var}")
+
+        # Check pip packages
+        import importlib
+        for pkg in self.requires_pip:
+            try:
+                importlib.import_module(pkg.split("[")[0])  # handle pkg[extra]
+            except ImportError:
+                missing.append(f"pip:{pkg}")
+
+        return (len(missing) == 0, missing)
 
     def get_tools(self) -> list[dict]:
         """Return Anthropic-compatible tool definitions."""

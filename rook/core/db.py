@@ -92,3 +92,52 @@ def execute_write(query: str, params: tuple = ()) -> int:
         cursor = conn.execute(query, params)
         conn.commit()
         return cursor.lastrowid
+
+
+# ── Conversation management ──────────────────────────────────
+
+def get_message_count() -> int:
+    """Return total number of conversation messages."""
+    rows = execute("SELECT COUNT(*) as cnt FROM messages")
+    return rows[0]["cnt"] if rows else 0
+
+
+def get_recent_messages(limit: int = 20) -> list[dict]:
+    """Return the most recent N messages, oldest first."""
+    return execute(
+        "SELECT role, content FROM messages ORDER BY id DESC LIMIT ?",
+        (limit,)
+    )[::-1]  # reverse to get chronological order
+
+
+def delete_old_messages(keep_latest: int = 20) -> int:
+    """Delete all messages except the latest N. Returns count deleted."""
+    total = get_message_count()
+    if total <= keep_latest:
+        return 0
+    with get_db() as conn:
+        conn.execute("""
+            DELETE FROM messages WHERE id NOT IN (
+                SELECT id FROM messages ORDER BY id DESC LIMIT ?
+            )
+        """, (keep_latest,))
+        conn.commit()
+    deleted = total - keep_latest
+    logger.info(f"Compaction: deleted {deleted} old messages, kept {keep_latest}")
+    return deleted
+
+
+def save_profile(key: str, value: str):
+    """Save a user profile key-value pair (upsert)."""
+    with get_db() as conn:
+        conn.execute(
+            "INSERT OR REPLACE INTO user_profile (key, value, updated_at) VALUES (?, ?, datetime('now'))",
+            (key, value)
+        )
+        conn.commit()
+
+
+def get_profile(key: str, default=None):
+    """Get a user profile value."""
+    rows = execute("SELECT value FROM user_profile WHERE key = ?", (key,))
+    return rows[0]["value"] if rows else default

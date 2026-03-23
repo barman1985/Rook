@@ -17,12 +17,16 @@ from telegram.ext import (
 )
 
 from rook.core.config import cfg
-from rook.core.db import execute_write, execute
+from rook.core.db import execute_write, execute, get_message_count, get_recent_messages, delete_old_messages, save_profile, get_profile
 from rook.core.events import bus
+from rook.core.llm import llm
 from rook.router.orchestrator import handle as orchestrate
 from rook.services.prompt import build_system_prompt
 
 logger = logging.getLogger(__name__)
+
+COMPACTION_THRESHOLD = 50
+MESSAGES_KEEP = 20
 
 
 def is_allowed(user_id: int) -> bool:
@@ -37,6 +41,34 @@ def save_message(role: str, content: str):
         "INSERT INTO messages (role, content) VALUES (?, ?)",
         (role, content)
     )
+
+
+async def _maybe_compact():
+    """Summarize and delete old messages when threshold is reached."""
+    total = get_message_count()
+    if total < COMPACTION_THRESHOLD:
+        return
+    try:
+        messages = get_recent_messages(total)
+        to_summarize = messages[:-MESSAGES_KEEP]
+        if not to_summarize:
+            return
+
+        existing_summary = get_profile("conversation_summary") or ""
+        lines = [f"{'User' if m['role'] == 'user' else 'Rook'}: {m['content'][:300]}" for m in to_summarize]
+
+        summary = await llm.chat(
+            f"Create a concise summary of these conversations (max 500 words). "
+            f"Focus on facts, preferences, decisions.\n\n"
+            f"Existing summary:\n{existing_summary or '(none)'}\n\n"
+            f"New conversations:\n" + "\n".join(lines),
+            max_tokens=1000,
+        )
+        save_profile("conversation_summary", summary)
+        deleted = delete_old_messages(keep_latest=MESSAGES_KEEP)
+        logger.info(f"Compaction: summarized and deleted {deleted} messages")
+    except Exception as e:
+        logger.error(f"Compaction error: {e}")
 
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -67,6 +99,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         reply = await orchestrate(user_text, system)
         save_message("assistant", reply)
+
+        # Background compaction check
+        await _maybe_compact()
 
         # Send reply (chunked if needed)
         if thinking:

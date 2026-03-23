@@ -56,6 +56,14 @@ def start_scheduler():
         name="Calendar reminders",
     )
 
+    # Heartbeat — every 60 minutes during active hours (7:00-22:00)
+    _scheduler.add_job(
+        _heartbeat,
+        CronTrigger(minute=30, hour="7-21"),  # :30 past each hour, 7:30-21:30
+        id="heartbeat",
+        name="Heartbeat",
+    )
+
     _scheduler.start()
     logger.info(f"Scheduler started (TZ: {cfg.timezone})")
 
@@ -193,3 +201,92 @@ async def _calendar_reminders():
 
     except Exception as e:
         logger.debug(f"Calendar reminder check: {e}")
+
+
+async def _heartbeat():
+    """
+    Proactive heartbeat — reads HEARTBEAT.md checklist, asks LLM
+    to evaluate whether anything needs attention, sends notification
+    only if something does. Silent otherwise.
+    """
+    logger.debug("Heartbeat tick")
+
+    # Load checklist
+    from pathlib import Path
+    heartbeat_path = Path(cfg.base_dir) / "HEARTBEAT.md"
+    if not heartbeat_path.exists():
+        return
+
+    checklist = heartbeat_path.read_text(errors="replace")
+
+    # Gather context for LLM
+    context_parts = []
+
+    # Calendar: next 2 hours
+    if cfg.google_enabled:
+        try:
+            from rook.skills.builtin.calendar_skill import _get_calendar_service, _format_event
+            from datetime import timedelta
+            service, err = _get_calendar_service()
+            if service and not err:
+                tz = pytz.timezone(cfg.timezone)
+                now = datetime.now(tz)
+                result = service.events().list(
+                    calendarId="primary",
+                    timeMin=now.isoformat(),
+                    timeMax=(now + timedelta(hours=2)).isoformat(),
+                    singleEvents=True, orderBy="startTime", maxResults=5,
+                ).execute()
+                events = result.get("items", [])
+                if events:
+                    context_parts.append("Upcoming events (next 2h):")
+                    for ev in events:
+                        context_parts.append(f"  {_format_event(ev)}")
+                else:
+                    context_parts.append("No events in next 2 hours.")
+        except Exception as e:
+            logger.debug(f"Heartbeat calendar: {e}")
+
+    # Unread emails
+    if cfg.google_enabled:
+        try:
+            from rook.skills.builtin.email_skill import _get_gmail_service
+            service, err = _get_gmail_service()
+            if service and not err:
+                result = service.users().messages().list(
+                    userId="me", q="is:unread", maxResults=3
+                ).execute()
+                count = result.get("resultSizeEstimate", 0)
+                context_parts.append(f"Unread emails: {count}")
+        except Exception:
+            pass
+
+    if not context_parts:
+        context_parts.append("No data sources available for checks.")
+
+    context = "\n".join(context_parts)
+
+    # Ask LLM to evaluate
+    try:
+        from rook.core.llm import llm
+        prompt = (
+            f"You are Rook, running a periodic heartbeat check.\n\n"
+            f"CHECKLIST:\n{checklist}\n\n"
+            f"CURRENT STATE:\n{context}\n\n"
+            f"Based on the checklist and current state, does anything need the user's attention RIGHT NOW?\n"
+            f"If YES: respond with a SHORT notification message (max 2 sentences).\n"
+            f"If NO: respond with exactly 'HEARTBEAT_OK' and nothing else.\n"
+            f"Be conservative — only notify if it's genuinely important."
+        )
+
+        response = await llm.chat(prompt, max_tokens=200)
+        response = response.strip()
+
+        if response and response != "HEARTBEAT_OK":
+            logger.info(f"Heartbeat notification: {response[:100]}")
+            await bus.emit("notification.send", {"text": f"💓 {response}"})
+        else:
+            logger.debug("Heartbeat: OK, nothing to report")
+
+    except Exception as e:
+        logger.error(f"Heartbeat LLM error: {e}")

@@ -65,13 +65,46 @@ class LLMClient:
         system: str = "",
         max_tokens: int = 500,
     ) -> str:
-        """Quick classification call using router model (cheap, fast)."""
+        """Quick classification call. Tries Ollama first (free, local), falls back to Haiku."""
+        # Try Ollama first
+        if cfg.ollama_enabled:
+            try:
+                result = await self._classify_via_ollama(user_message, system)
+                if result:
+                    return result
+            except Exception as e:
+                logger.debug(f"Ollama fallback: {e}")
+
         return await self.chat(
             user_message,
             system=system,
             model=cfg.router_model,
             max_tokens=max_tokens,
         )
+
+    async def _classify_via_ollama(self, user_message: str, system: str = "") -> str | None:
+        """Try local Ollama for classification. Returns None on failure."""
+        try:
+            import httpx
+            prompt = f"{system}\n\nUser: {user_message}" if system else user_message
+            async with httpx.AsyncClient(timeout=cfg.ollama_timeout) as client:
+                resp = await client.post(
+                    f"{cfg.ollama_url}/api/generate",
+                    json={
+                        "model": cfg.ollama_model,
+                        "prompt": prompt,
+                        "stream": False,
+                        "options": {"temperature": 0.1, "num_predict": 500},
+                    },
+                )
+            if resp.status_code != 200:
+                return None
+            result = resp.json().get("response", "").strip()
+            logger.debug(f"Ollama classify: {result[:100]}")
+            return result if result else None
+        except Exception as e:
+            logger.debug(f"Ollama error: {e}")
+            return None
 
 
 # Singleton

@@ -46,6 +46,12 @@ class Config:
     # ── Voice ──
     piper_model_path: str = "tts_models/cs_CZ-jirka-medium.onnx"
 
+    # ── Ollama (local LLM fallback) ──
+    ollama_enabled: bool = False
+    ollama_url: str = "http://localhost:11434"
+    ollama_model: str = "qwen2.5:3b"
+    ollama_timeout: int = 15
+
     # ── System ──
     base_dir: str = ""
     db_path: str = "rook.db"
@@ -97,6 +103,10 @@ class Config:
             spotify_redirect_uri=get("SPOTIFY_REDIRECT_URI", "http://localhost:8888/callback"),
             chromecast_device_name=get("CHROMECAST_DEVICE_NAME"),
             piper_model_path=get("PIPER_MODEL_PATH", "tts_models/cs_CZ-jirka-medium.onnx"),
+            ollama_enabled=get("OLLAMA_ENABLED", "0") == "1",
+            ollama_url=get("OLLAMA_URL", "http://localhost:11434"),
+            ollama_model=get("OLLAMA_MODEL", "qwen2.5:3b"),
+            ollama_timeout=int(get("OLLAMA_TIMEOUT", "15")),
             db_path=get("DB_PATH", "rook.db"),
             log_level=get("LOG_LEVEL", "INFO"),
             timezone=get("TIMEZONE", "Europe/Prague"),
@@ -124,6 +134,8 @@ class Config:
             features.append("TV/Chromecast")
         if self.voice_enabled:
             features.append("Voice (Piper TTS)")
+        if self.ollama_enabled:
+            features.append(f"Ollama ({self.ollama_model})")
         return (
             f"Model: {self.main_model}\n"
             f"Features: {', '.join(features) or 'none'}\n"
