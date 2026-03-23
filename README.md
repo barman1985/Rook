@@ -43,11 +43,13 @@ Rook is an open-source personal AI assistant that lives in Telegram. It doesn't 
 
 ## What makes Rook different
 
-- **Actually does things** — not a chatbot. Rook creates calendar events, sends emails, controls Spotify, and more.
-- **Proactive, not reactive** — morning briefings, calendar reminders, follow-up detection.
-- **Memory that works like yours** — ACT-R cognitive architecture: frequently accessed memories stay sharp, unused ones fade naturally.
-- **Local voice** — speech-to-text and text-to-speech run locally on your machine. Free, private, no API costs.
-- **Plugin system** — drop a Python file in `skills/community/` and Rook picks it up. No core changes needed.
+- **Actually does things** — not a chatbot. Rook creates calendar events, sends emails, controls Spotify, manages your smart home, and more.
+- **Proactive, not reactive** — morning briefings, calendar reminders, and a heartbeat system that periodically checks if anything needs your attention.
+- **Memory that works like yours** — ACT-R cognitive architecture: frequently accessed memories stay sharp, unused ones fade naturally. Conversation compaction keeps context without infinite DB growth.
+- **User-editable personality** — edit `SOUL.md` to change how Rook communicates. No code, no restart, instant effect.
+- **Smart home ready** — Home Assistant integration out of the box. Control lights, climate, sensors via natural language.
+- **Local LLM fallback** — optional Ollama integration for router classification. Free, private, offline-capable.
+- **Plugin system with dependency validation** — drop a Python file in `skills/community/`, declare what it needs, and Rook picks it up. Missing API key? Graceful disable, not a crash.
 - **Telegram-native** — zero onboarding. No new app to install.
 
 ---
@@ -60,12 +62,16 @@ Rook is an open-source personal AI assistant that lives in Telegram. It doesn't 
 | 📧 **Email** | Read, search, send emails (Gmail) |
 | 🎵 **Spotify** | Play, search, playlists, device control |
 | 📺 **TV** | Power, apps, volume (Chromecast) |
-| 🧠 **Memory** | ACT-R activation scoring, decay, long-term recall |
+| 🏠 **Smart Home** | Home Assistant integration — lights, climate, sensors, any HA entity |
+| 🧠 **Memory** | ACT-R activation scoring, decay, long-term recall, conversation compaction |
+| 💓 **Heartbeat** | Periodic proactive check — "does anything need attention?" Silent if no. |
 | 🔔 **Proactive** | Calendar reminders, morning briefings, evening summaries |
+| 🎭 **SOUL.md** | User-editable personality, communication style, rules — no restart needed |
 | 🎙️ **Voice** | Local STT (faster-whisper) + TTS (Piper) |
+| 🤖 **Ollama** | Optional local LLM fallback for router (free, private) |
 | 🌐 **Web search** | Current info via Anthropic web search |
 | 🔌 **MCP Server** | Expose all tools to Claude Desktop, Cursor, etc. |
-| 🧩 **Plugins** | Community-contributed skills, auto-discovered |
+| 🧩 **Plugins** | Community skills with dependency validation, auto-discovered |
 
 ---
 
@@ -123,18 +129,20 @@ docker-compose up -d
 │       Transport layer           │  Telegram, MCP, CLI
 ├─────────────────────────────────┤
 │       Router / Orchestrator     │  Intent → model → agent loop
+│       (Ollama local fallback)   │  Classify via local LLM or Haiku
 ├─────────────────────────────────┤
 │       Skill layer (pluggable)   │  Calendar, Email, Spotify, ...
 │  ┌──────┐ ┌──────┐ ┌────────┐  │
-│  │built │ │built │ │community│  │  Drop a .py, done.
-│  │ -in  │ │ -in  │ │ plugin │  │
+│  │built │ │built │ │communit│  │  Drop a .py, declare deps, done.
+│  │ -in  │ │ -in  │ │HomeAsst│  │
 │  └──────┘ └──────┘ └────────┘  │
 ├─────────────────────────────────┤
-│       Event bus                 │  on("calendar.reminder") → notify
+│       Event bus + Heartbeat     │  on("calendar.reminder") → notify
 ├─────────────────────────────────┤
 │       Core services             │  Config, DB, Memory, LLM client
+│       SOUL.md  HEARTBEAT.md     │  User-editable personality + checks
 ├─────────────────────────────────┤
-│       Storage (SQLite)          │  Single access point
+│       Storage (SQLite + WAL)    │  Single access point, compaction
 └─────────────────────────────────┘
 ```
 
@@ -151,6 +159,7 @@ from rook.skills.base import Skill, tool
 class WeatherSkill(Skill):
     name = "weather"
     description = "Get weather forecasts"
+    requires_pip = ["httpx"]          # auto-checked at startup
 
     @tool("get_weather", "Get current weather for a city")
     def get_weather(self, city: str) -> str:
@@ -161,7 +170,20 @@ class WeatherSkill(Skill):
 skill = WeatherSkill()  # Required: module-level instance
 ```
 
-That's it. Restart Rook and the skill is live.
+That's it. Restart Rook and the skill is live. If `httpx` is missing, Rook logs `"Skill weather disabled — missing: pip:httpx"` instead of crashing.
+
+### Dependency declarations
+
+Skills can declare what they need. The loader validates at startup:
+
+```python
+class MySkill(Skill):
+    name = "my_skill"
+    requires_env = ["MY_API_KEY"]        # checked in .env
+    requires_pip = ["some_package"]      # checked via importlib
+```
+
+Missing dependency → skill is disabled gracefully with a clear log message. No runtime crashes, no guessing.
 
 ---
 
@@ -173,18 +195,103 @@ Rook/
 │   ├── core/           # Config, DB, Memory, LLM, Events
 │   ├── router/         # Orchestrator, intent routing
 │   ├── skills/
-│   │   ├── base.py     # Skill interface
-│   │   ├── loader.py   # Auto-discovery
+│   │   ├── base.py     # Skill interface + dependency declarations
+│   │   ├── loader.py   # Auto-discovery + validation
 │   │   ├── builtin/    # Calendar, Email, Spotify, etc.
 │   │   └── community/  # Your plugins go here
-│   ├── services/       # Prompt builder, scheduler, briefings
+│   ├── services/       # Prompt builder, scheduler, heartbeat
 │   ├── transport/      # Telegram, MCP server
 │   └── main.py         # Entry point
 ├── tests/
 ├── docs/
+├── SOUL.md             # Editable personality
+├── HEARTBEAT.md        # Proactive checklist
 ├── .env.example
 └── requirements.txt
 ```
+
+---
+
+## Customize personality — SOUL.md
+
+Rook reads `SOUL.md` from its base directory to define personality, communication style, and rules. Edit it anytime — changes take effect on the next message, no restart needed.
+
+```markdown
+# Soul: Rook
+
+## Personality
+You are Rook, a strategic AI personal assistant...
+
+## Communication style
+- Speak the user's language (auto-detect)
+- Keep responses under 200 words
+- "Done." is a valid response
+
+## Active hours
+- Proactive messages: 7:00 — 22:00
+- Max 3 proactive messages per day
+```
+
+Delete the file to revert to the default personality.
+
+---
+
+## Heartbeat — proactive awareness
+
+Rook periodically wakes up (every hour during active hours), reads `HEARTBEAT.md`, checks calendar and email, and asks itself: *"Does anything need the user's attention?"*
+
+If yes → sends a short notification. If no → stays silent (`HEARTBEAT_OK`).
+
+Edit `HEARTBEAT.md` to customize what Rook monitors:
+
+```markdown
+## Priority checks (every heartbeat)
+- Are there unread emails that might need a response?
+- Are there calendar events in the next 2 hours?
+
+## How NOT to be proactive
+- Don't send updates about things that haven't changed
+- Max 3 proactive messages per day
+```
+
+---
+
+## Home Assistant — smart home control
+
+Rook ships with a Home Assistant community skill. Setup:
+
+1. Get a Long-Lived Access Token from HA: *Settings → Security → Create Token*
+2. Add to `.env`:
+   ```
+   HASS_URL=http://192.168.1.100:8123
+   HASS_TOKEN=your_long_lived_token
+   ```
+3. Restart Rook — the skill auto-enables.
+
+**Tools:** `hass_get_state`, `hass_call_service`, `hass_list_entities`, `hass_overview`
+
+Examples: *"Turn off the living room lights"*, *"What's the temperature?"*, *"List all lights"*, *"Give me a home overview"*
+
+No HASS_URL configured? The skill is silently disabled — no crash, no error.
+
+---
+
+## Ollama — local LLM fallback
+
+Rook can use a local Ollama model for quick classification tasks (router), saving API costs and enabling offline operation.
+
+```bash
+# Install Ollama
+curl -fsSL https://ollama.com/install.sh | sh
+ollama pull qwen2.5:3b
+
+# Enable in .env
+OLLAMA_ENABLED=1
+OLLAMA_URL=http://localhost:11434
+OLLAMA_MODEL=qwen2.5:3b
+```
+
+When enabled, `llm.classify()` tries Ollama first and falls back to Haiku on failure. The main model (Sonnet/Opus) is unaffected — only the router uses Ollama.
 
 ---
 
