@@ -293,6 +293,16 @@ OLLAMA_MODEL=qwen2.5:3b
 
 When enabled, `llm.classify()` tries Ollama first and falls back to Haiku on failure. The main model (Sonnet/Opus) is unaffected — only the router uses Ollama.
 
+Rook tracks Ollama performance automatically. If Ollama fails repeatedly (>30% failure rate) or becomes slow (avg >5s), it enters a 10-minute cooldown and routes to Haiku instead — no manual intervention needed.
+
+---
+
+## Language support
+
+Rook automatically responds in the user's language. Write in Spanish, get Spanish back. Write in Japanese, get Japanese back — regardless of the language of emails, calendar events, or other data sources processed by tools.
+
+This is enforced at the SOUL level and applies to all built-in skills.
+
 ---
 
 ## Contributing

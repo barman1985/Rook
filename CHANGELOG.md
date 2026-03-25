@@ -2,6 +2,21 @@
 
 All notable changes to Rook will be documented in this file.
 
+## [0.2.1] — 2026-03-25
+
+### Fixed
+- **Language switching bug** — Rook no longer switches to the language of tool results (e.g. English email subjects) mid-conversation. SOUL.md now has an explicit universal language rule: always respond in the user's language, regardless of data source language.
+- **Unsolicited commentary** — Rook no longer comments on side-effect data from tool calls (e.g. total unread email count) unless the user explicitly asked about it.
+- **Conversation amnesia** — orchestrator now receives full conversation history (last 20 messages). Previously each message was processed without context.
+- **Compaction language** — `_maybe_compact()` prompt rewritten to be language-neutral. Previously the summary was always generated in English, causing confusion in non-English conversations.
+- **Ollama reliability** — `_classify_via_ollama()` now tracks success/failure metrics. Enters 10-minute cooldown after >30% failure rate or avg latency >5s, preventing repeated 15s timeouts when Ollama is unavailable.
+
+### Changed
+- `orchestrator.py`: `handle()` accepts optional `history` parameter. `MAX_ITERATIONS` raised from 10 to 12.
+- `llm.py`: `_OllamaMetrics` class added with adaptive cooldown (ported from Jarvis).
+- `email_skill.py`: tool result strings are now language-neutral structured format.
+- `SOUL.md`: language rule made explicit and universal; anti-commentary rule added.
+
 ## [0.2.0] — 2026-03-23
 
 ### Added
