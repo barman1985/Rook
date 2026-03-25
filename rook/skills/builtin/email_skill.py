@@ -80,9 +80,9 @@ class EmailSkill(Skill):
 
         messages = result.get("messages", [])
         if not messages:
-            return f"No emails found for: {query}"
+            return f"[0 results: {query}]"
 
-        lines = [f"Emails matching '{query}':"]
+        lines = [f"[{len(messages)} emails: {query}]"]
         for msg_ref in messages:
             msg = service.users().messages().get(
                 userId="me", id=msg_ref["id"], format="full"

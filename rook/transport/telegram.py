@@ -55,13 +55,13 @@ async def _maybe_compact():
             return
 
         existing_summary = get_profile("conversation_summary") or ""
-        lines = [f"{'User' if m['role'] == 'user' else 'Rook'}: {m['content'][:300]}" for m in to_summarize]
+        lines = [f"{'Uživatel' if m['role'] == 'user' else 'Rook'}: {m['content'][:300]}" for m in to_summarize]
 
         summary = await llm.chat(
-            f"Create a concise summary of these conversations (max 500 words). "
-            f"Focus on facts, preferences, decisions.\n\n"
-            f"Existing summary:\n{existing_summary or '(none)'}\n\n"
-            f"New conversations:\n" + "\n".join(lines),
+            f"Vytvoř stručné shrnutí těchto konverzací (max 500 slov). "
+            f"Zaměř se na fakta, preference, rozhodnutí. Piš ve stejném jazyce jako konverzace.\n\n"
+            f"Existující shrnutí:\n{existing_summary or '(žádné)'}\n\n"
+            f"Nové konverzace:\n" + "\n".join(lines),
             max_tokens=1000,
         )
         save_profile("conversation_summary", summary)
@@ -89,6 +89,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Build system prompt and orchestrate
     system = build_system_prompt()
+    history = get_recent_messages(20)  # předej historii pro kontext
 
     thinking = None
     try:
@@ -97,7 +98,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         pass
 
     try:
-        reply = await orchestrate(user_text, system)
+        reply = await orchestrate(user_text, system, history=history)
         save_message("assistant", reply)
 
         # Background compaction check

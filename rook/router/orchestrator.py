@@ -17,7 +17,7 @@ from rook.skills.loader import get_all_tools, execute_tool
 
 logger = logging.getLogger(__name__)
 
-MAX_ITERATIONS = 10
+MAX_ITERATIONS = 12
 
 
 async def handle(
@@ -26,16 +26,23 @@ async def handle(
     max_iterations: int = MAX_ITERATIONS,
     tools: list[dict] = None,
     model: str = None,
+    history: list[dict] = None,
 ) -> str:
     """
     Main agentic loop.
-    1. Send user message + tools to LLM
+    1. Send user message + tools to LLM (with conversation history)
     2. If LLM returns tool_use → execute → send result back
     3. Repeat until LLM returns text-only response
     """
     active_tools = tools if tools is not None else get_all_tools()
     model = model or cfg.main_model
-    messages = [{"role": "user", "content": user_text}]
+
+    # Sestav messages z historie + aktuální zpráva
+    messages: list[dict] = []
+    if history:
+        for msg in history[:-1]:  # vše kromě poslední (= aktuální user_text)
+            messages.append({"role": msg["role"], "content": msg["content"]})
+    messages.append({"role": "user", "content": user_text})
 
     for iteration in range(max_iterations):
         response = await llm.chat_with_tools(
