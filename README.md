@@ -305,6 +305,25 @@ This is enforced at the SOUL level and applies to all built-in skills.
 
 ---
 
+## Testing
+
+Rook ships with a test suite covering core functionality.
+
+```bash
+cd /opt/rook
+python3 -m pytest tests/ -v
+```
+
+Current coverage:
+- `test_core.py` — DB, memory (ACT-R), events, config, compaction
+- `test_services.py` — prompt builder, scheduler, notifications
+- `test_skills.py` — skill registration, tool schemas, medications, X posting, RSS
+- `test_routing.py` — Ollama adaptive metrics, orchestrator history handling, SOUL.md rules
+
+Tests that depend on the Anthropic SDK (orchestrator integration tests) are automatically skipped in environments without it and run on the deployment server.
+
+---
+
 ## Contributing
 
 We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.

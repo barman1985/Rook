@@ -11,6 +11,9 @@ All notable changes to Rook will be documented in this file.
 - **Compaction language** — `_maybe_compact()` prompt rewritten to be language-neutral. Previously the summary was always generated in English, causing confusion in non-English conversations.
 - **Ollama reliability** — `_classify_via_ollama()` now tracks success/failure metrics. Enters 10-minute cooldown after >30% failure rate or avg latency >5s, preventing repeated 15s timeouts when Ollama is unavailable.
 
+### Added
+- `tests/test_routing.py` — 16 new tests covering: `_OllamaMetrics` adaptive cooldown logic (9 tests), orchestrator `history` parameter and message assembly (4 tests, run on VPS with anthropic), SOUL.md language and commentary rules (3 tests).
+
 ### Changed
 - `orchestrator.py`: `handle()` accepts optional `history` parameter. `MAX_ITERATIONS` raised from 10 to 12.
 - `llm.py`: `_OllamaMetrics` class added with adaptive cooldown (ported from Jarvis).
