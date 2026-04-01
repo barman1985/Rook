@@ -2,6 +2,27 @@
 
 All notable changes to Rook will be documented in this file.
 
+## [2.1.0] — 2026-04-01
+
+### Changed — Multi-Provider LLM Architecture (FREE tier support)
+
+- **LLM client rewrite** (`core/llm.py`) — Multi-provider support with automatic fallback chain. Groq (free) → Cerebras (free) → Anthropic (paid). Format conversion is transparent — orchestrator unchanged.
+- **New default providers** — Groq Llama 4 Scout (primary, 30 RPM burst, 1000 req/day) and Cerebras Qwen 235B (fallback, 14400 req/day). Both free, no credit card needed. Anthropic now optional.
+- **Config updated** (`core/config.py`) — Added `GROQ_API_KEY`, `GROQ_MODEL`, `CEREBRAS_API_KEY`, `CEREBRAS_MODEL`. Validation accepts any provider (not just Anthropic).
+- **Rate limiting** — Built-in per-provider rate limiting (2.1s Groq, 5.0s Cerebras) prevents 429 errors in agent loops.
+- **Automatic fallback** — On provider error/429, silently falls back to next available provider. No user-visible interruption.
+- **OpenAI-compatible wrapper** — Response objects mimic Anthropic format (`_Response`, `_TextBlock`, `_ToolUseBlock`), so `orchestrator.py` works with any provider without changes.
+- **Documentation** — Updated README Quick start, .env.example, requirements.txt. Groq/Cerebras prominently featured as recommended free setup.
+
+### Architecture decisions (benchmark-verified 2026-04-01)
+
+10 models tested × 8 tests (tool calling, memory, empathy, anti-hallucination, disambiguation, Czech):
+- Cerebras Qwen 235B: 8/8 (best quality, but 1 req/5s burst limit)
+- Groq Qwen3 32B: 7/8, Groq Kimi K2: 7/8
+- Groq Llama 4 Scout: 6/8 (chosen for primary — best burst tolerance)
+- Mistral Large: 4/8 (hallucinates — excluded from agent brain)
+- Gemini 2.5 Flash: 0/8 (20 req/day — unusable)
+
 ## [2.0.0] — 2026-04-01
 
 ### Added — Rook 2.0: Intelligence Layer

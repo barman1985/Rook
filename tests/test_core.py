@@ -27,7 +27,7 @@ class TestConfig:
         from rook.core.config import Config
         c = Config()
         errors = c.validate()
-        assert "ANTHROPIC_API_KEY" in errors
+        assert any("LLM provider" in e or "GROQ" in e or "ANTHROPIC" in e for e in errors)
         assert "TELEGRAM_BOT_TOKEN" in errors
 
     def test_validate_complete(self):

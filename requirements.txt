@@ -1,5 +1,8 @@
 # Rook — dependencies
-anthropic>=0.40.0
+
+# LLM providers (at least one required)
+openai>=1.0           # Groq + Cerebras (FREE tier, recommended)
+anthropic>=0.40.0     # Anthropic (paid, optional — highest quality)
 python-telegram-bot>=21.0
 httpx>=0.27.0
 

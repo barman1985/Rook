@@ -91,8 +91,16 @@ Rook is an open-source personal AI assistant that lives in Telegram. It doesn't 
 ### Prerequisites
 
 - Python 3.11+
-- [Anthropic API key](https://console.anthropic.com/)
 - [Telegram bot token](https://core.telegram.org/bots#how-do-i-create-a-bot)
+- **LLM provider** — at least one (all are free, no credit card needed):
+
+| Provider | Cost | Signup | Best for |
+|----------|------|--------|----------|
+| [Groq](https://console.groq.com) | **$0** | Instant, no CC | Primary brain (fast burst, tool calling) |
+| [Cerebras](https://cloud.cerebras.ai) | **$0** | Instant, no CC | Fallback (highest quality, 14K req/day) |
+| [Anthropic](https://console.anthropic.com/) | Paid | CC required | Premium quality (optional) |
+
+> **Recommended:** Set both `GROQ_API_KEY` and `CEREBRAS_API_KEY` for maximum reliability at $0/month.
 
 ### Install
 
@@ -116,7 +124,15 @@ Or configure manually:
 
 ```bash
 cp .env.example .env
-# Edit .env with your API keys
+# Edit .env — set at least GROQ_API_KEY + TELEGRAM_BOT_TOKEN
+```
+
+**Minimal free setup** (`.env`):
+```bash
+GROQ_API_KEY=gsk_your_key_here          # Free at console.groq.com
+CEREBRAS_API_KEY=csk_your_key_here      # Free at cloud.cerebras.ai (optional fallback)
+TELEGRAM_BOT_TOKEN=123456:ABC-xyz       # From @BotFather
+TELEGRAM_CHAT_ID=your_chat_id           # Your Telegram user ID
 ```
 
 ### Run

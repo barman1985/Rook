@@ -22,15 +22,25 @@ logger = logging.getLogger(__name__)
 class Config:
     """Rook configuration — loaded once at startup."""
 
-    # ── Required ──
+    # ── Required (at least one provider must be configured) ──
     anthropic_api_key: str = ""
     telegram_bot_token: str = ""
     telegram_chat_id: str = ""
 
-    # ── Models ──
+    # ── Anthropic Models (paid — used if ANTHROPIC_API_KEY set) ──
     main_model: str = "claude-sonnet-4-20250514"
     router_model: str = "claude-haiku-4-5-20251001"
     escalation_model: str = "claude-opus-4-20250514"
+
+    # ── Groq (FREE — primary agent brain, 30 RPM, 1000 RPD) ──
+    groq_api_key: str = ""
+    groq_model: str = "meta-llama/llama-4-scout-17b-16e-instruct"
+    groq_base_url: str = "https://api.groq.com/openai/v1"
+
+    # ── Cerebras (FREE — fallback agent, 14400 RPD, slower burst) ──
+    cerebras_api_key: str = ""
+    cerebras_model: str = "qwen-3-235b-a22b-instruct-2507"
+    cerebras_base_url: str = "https://api.cerebras.ai/v1"
 
     # ── Google ──
     google_credentials_path: str = ""
@@ -97,6 +107,12 @@ class Config:
             main_model=get("MAIN_MODEL", "claude-sonnet-4-20250514"),
             router_model=get("ROUTER_MODEL", "claude-haiku-4-5-20251001"),
             escalation_model=get("ESCALATION_MODEL", "claude-opus-4-20250514"),
+            groq_api_key=get("GROQ_API_KEY"),
+            groq_model=get("GROQ_MODEL", "meta-llama/llama-4-scout-17b-16e-instruct"),
+            groq_base_url=get("GROQ_BASE_URL", "https://api.groq.com/openai/v1"),
+            cerebras_api_key=get("CEREBRAS_API_KEY"),
+            cerebras_model=get("CEREBRAS_MODEL", "qwen-3-235b-a22b-instruct-2507"),
+            cerebras_base_url=get("CEREBRAS_BASE_URL", "https://api.cerebras.ai/v1"),
             google_credentials_path=get("GOOGLE_CREDENTIALS_PATH"),
             spotify_client_id=get("SPOTIFY_CLIENT_ID"),
             spotify_client_secret=get("SPOTIFY_CLIENT_SECRET"),
@@ -115,8 +131,8 @@ class Config:
     def validate(self) -> list[str]:
         """Return list of missing required config items."""
         errors = []
-        if not self.anthropic_api_key:
-            errors.append("ANTHROPIC_API_KEY")
+        if not self.anthropic_api_key and not self.groq_api_key and not self.cerebras_api_key:
+            errors.append("No LLM provider configured (set GROQ_API_KEY, CEREBRAS_API_KEY, or ANTHROPIC_API_KEY)")
         if not self.telegram_bot_token:
             errors.append("TELEGRAM_BOT_TOKEN")
         if not self.telegram_chat_id:
@@ -125,6 +141,23 @@ class Config:
 
     def summary(self) -> str:
         """Human-readable config summary for startup log."""
+        # LLM provider
+        if self.groq_api_key:
+            llm_info = f"Groq ({self.groq_model})"
+        elif self.cerebras_api_key:
+            llm_info = f"Cerebras ({self.cerebras_model})"
+        elif self.anthropic_api_key:
+            llm_info = f"Anthropic ({self.main_model})"
+        else:
+            llm_info = "NONE — configure GROQ_API_KEY or ANTHROPIC_API_KEY"
+
+        fallback = []
+        if self.groq_api_key and self.cerebras_api_key:
+            fallback.append("Cerebras")
+        if self.anthropic_api_key and self.groq_api_key:
+            fallback.append("Anthropic")
+        fallback_str = f" → fallback: {', '.join(fallback)}" if fallback else ""
+
         features = []
         if self.google_enabled:
             features.append("Google (Calendar + Gmail)")
@@ -137,7 +170,7 @@ class Config:
         if self.ollama_enabled:
             features.append(f"Ollama ({self.ollama_model})")
         return (
-            f"Model: {self.main_model}\n"
+            f"LLM: {llm_info}{fallback_str}\n"
             f"Features: {', '.join(features) or 'none'}\n"
             f"DB: {self.db_path}\n"
             f"TZ: {self.timezone}"
