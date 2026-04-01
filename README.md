@@ -29,9 +29,9 @@
 
 ---
 
-Rook is an open-source personal AI assistant that lives in Telegram. It doesn't just answer questions — it manages your calendar, triages your email, controls your music, remembers your preferences, and proactively keeps you on track.
+Rook is an open-source personal AI assistant that lives in Telegram. It doesn't just answer questions — it manages your calendar, triages your email, controls your music, remembers your preferences, and proactively keeps you on track. With Rook 2.0, it also understands your emotional context, knows its own strengths and weaknesses, improves its own code, and can communicate with other AI agents.
 
-> *"Like having a chief of staff in your pocket."*
+> *"First open-source Telegram AI that runs 100% FREE."*
 
 <!-- TODO: Add demo GIF here
 <p align="center">
@@ -49,6 +49,10 @@ Rook is an open-source personal AI assistant that lives in Telegram. It doesn't 
 - **User-editable personality** — edit `SOUL.md` to change how Rook communicates. No code, no restart, instant effect.
 - **Smart home ready** — Home Assistant integration out of the box. Control lights, climate, sensors via natural language.
 - **Local LLM fallback** — optional Ollama integration for router classification. Free, private, offline-capable.
+- **Self-improving** — Rook can read and propose changes to its own source code. You review and /approve. Sandboxed, syntax-checked, git-committed.
+- **Emotionally aware** — tracks conversation mood in real-time. Knows when you're stressed, focused, or playful. Adjusts accordingly.
+- **Self-calibrated** — Bayesian confidence tracking per domain. Rook knows what it's good at and what it's not. No hallucinated overconfidence.
+- **Agent-to-agent** — Google A2A protocol. Rook can discover and communicate with other AI agents, gated by a trust system.
 - **Plugin system with dependency validation** — drop a Python file in `skills/community/`, declare what it needs, and Rook picks it up. Missing API key? Graceful disable, not a crash.
 - **Telegram-native** — zero onboarding. No new app to install.
 
@@ -72,6 +76,13 @@ Rook is an open-source personal AI assistant that lives in Telegram. It doesn't 
 | 🌐 **Web search** | Current info via Anthropic web search |
 | 🔌 **MCP Server** | Expose all tools to Claude Desktop, Cursor, etc. |
 | 🧩 **Plugins** | Community skills with dependency validation, auto-discovered |
+| 🕸️ **Graph Memory** | Entity-relation knowledge graph — "User → lives_in → Prague" |
+| 💜 **Emotional Memory** | Tracks conversation mood (valence/arousal), daily imprints, mode detection |
+| 🎯 **Metacognition** | Bayesian confidence per domain — Rook knows what it's good at |
+| 🔧 **Self-Improvement** | Reads and proposes changes to own code. /approve or /reject. Sandboxed. |
+| 🤝 **A2A** | Agent-to-Agent communication via Google A2A protocol (JSON-RPC 2.0) |
+| 🛡️ **Trust System** | Knowledge Broker — trust scoring, content sanitization, injection detection |
+| 🔍 **Discovery** | Proactive RSS scanning 4×/day, relevance scoring, max 3 notifications/day |
 
 ---
 
@@ -133,8 +144,18 @@ docker-compose up -d
 ├─────────────────────────────────┤
 │       Skill layer (pluggable)   │  Calendar, Email, Spotify, ...
 │  ┌──────┐ ┌──────┐ ┌────────┐  │
-│  │built │ │built │ │communit│  │  Drop a .py, declare deps, done.
-│  │ -in  │ │ -in  │ │HomeAsst│  │
+│  │built │ │self  │ │communit│  │  Drop a .py, declare deps, done.
+│  │ -in  │ │improv│ │HomeAsst│  │
+│  └──────┘ └──────┘ └────────┘  │
+├─────────────────────────────────┤
+│       Intelligence layer [2.0]  │
+│  ┌──────┐ ┌──────┐ ┌────────┐  │
+│  │Emotio│ │Graph │ │Meta    │  │  Emotional awareness, knowledge
+│  │Memory│ │Memory│ │cogniti.│  │  graph, Bayesian confidence
+│  └──────┘ └──────┘ └────────┘  │
+│  ┌──────┐ ┌──────┐ ┌────────┐  │
+│  │Know- │ │ A2A  │ │Discov- │  │  Trust system, peer agents,
+│  │Broker│ │Client│ │  ery   │  │  proactive RSS scanning
 │  └──────┘ └──────┘ └────────┘  │
 ├─────────────────────────────────┤
 │       Event bus + Heartbeat     │  on("calendar.reminder") → notify

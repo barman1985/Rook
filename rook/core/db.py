@@ -61,6 +61,103 @@ def init_db():
                 data        TEXT,
                 timestamp   TEXT DEFAULT (datetime('now'))
             );
+
+            -- Knowledge graph (entity-relation triples)
+            CREATE TABLE IF NOT EXISTS knowledge_graph (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                subject     TEXT NOT NULL,
+                predicate   TEXT NOT NULL,
+                object      TEXT NOT NULL,
+                confidence  REAL DEFAULT 0.8,
+                source      TEXT DEFAULT 'conversation',
+                created_at  TEXT DEFAULT (datetime('now')),
+                updated_at  TEXT DEFAULT (datetime('now'))
+            );
+            CREATE INDEX IF NOT EXISTS idx_kg_subject ON knowledge_graph(subject);
+            CREATE INDEX IF NOT EXISTS idx_kg_object ON knowledge_graph(object);
+
+            -- Emotional imprints (consolidated session emotions)
+            CREATE TABLE IF NOT EXISTS emotional_imprints (
+                id                INTEGER PRIMARY KEY AUTOINCREMENT,
+                summary           TEXT NOT NULL,
+                valence           REAL DEFAULT 0.0,
+                arousal           REAL DEFAULT 0.0,
+                dominant_emotion  TEXT DEFAULT 'neutral',
+                trigger           TEXT DEFAULT '',
+                message_count     INTEGER DEFAULT 0,
+                timestamp         TEXT DEFAULT (datetime('now'))
+            );
+
+            -- Emotional quotes (memorable quotes with emotional context)
+            CREATE TABLE IF NOT EXISTS emotional_quotes (
+                id        INTEGER PRIMARY KEY AUTOINCREMENT,
+                text      TEXT NOT NULL,
+                context   TEXT DEFAULT '',
+                emotion   TEXT DEFAULT '',
+                source    TEXT DEFAULT 'user',
+                timestamp TEXT DEFAULT (datetime('now'))
+            );
+
+            -- Metacognition (Bayesian confidence per domain)
+            CREATE TABLE IF NOT EXISTS metacognition (
+                domain       TEXT PRIMARY KEY,
+                alpha        REAL DEFAULT 2.0,
+                beta         REAL DEFAULT 2.0,
+                last_updated TEXT DEFAULT (datetime('now'))
+            );
+
+            -- Capability log (individual task outcomes)
+            CREATE TABLE IF NOT EXISTS capability_log (
+                id        INTEGER PRIMARY KEY AUTOINCREMENT,
+                domain    TEXT NOT NULL,
+                success   INTEGER DEFAULT 1,
+                score     REAL DEFAULT 1.0,
+                timestamp TEXT DEFAULT (datetime('now'))
+            );
+
+            -- A2A peers (known agent peers)
+            CREATE TABLE IF NOT EXISTS a2a_peers (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                agent_id    TEXT NOT NULL UNIQUE,
+                name        TEXT DEFAULT '',
+                url         TEXT DEFAULT '',
+                card_json   TEXT DEFAULT '{}',
+                trust_score REAL DEFAULT 0.3,
+                last_seen   TEXT DEFAULT (datetime('now'))
+            );
+
+            -- A2A exchanges (communication log)
+            CREATE TABLE IF NOT EXISTS a2a_exchanges (
+                id        INTEGER PRIMARY KEY AUTOINCREMENT,
+                direction TEXT NOT NULL,
+                agent_id  TEXT NOT NULL,
+                topic     TEXT DEFAULT '',
+                question  TEXT DEFAULT '',
+                response  TEXT DEFAULT '',
+                relevance REAL DEFAULT 0.0,
+                timestamp TEXT DEFAULT (datetime('now'))
+            );
+
+            -- Discovery items (found via RSS)
+            CREATE TABLE IF NOT EXISTS discovery_items (
+                id        INTEGER PRIMARY KEY AUTOINCREMENT,
+                url       TEXT NOT NULL UNIQUE,
+                title     TEXT DEFAULT '',
+                summary   TEXT DEFAULT '',
+                score     REAL DEFAULT 0.0,
+                source    TEXT DEFAULT '',
+                notified  INTEGER DEFAULT 0,
+                timestamp TEXT DEFAULT (datetime('now'))
+            );
+
+            -- Discovery sources (RSS feeds)
+            CREATE TABLE IF NOT EXISTS discovery_sources (
+                id       INTEGER PRIMARY KEY AUTOINCREMENT,
+                url      TEXT NOT NULL UNIQUE,
+                name     TEXT DEFAULT '',
+                category TEXT DEFAULT 'general',
+                enabled  INTEGER DEFAULT 1
+            );
         """)
         conn.commit()
     logger.info("Database initialized")

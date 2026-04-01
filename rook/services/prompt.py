@@ -38,6 +38,34 @@ def _load_soul() -> str:
         return ""
 
 
+def _safe_load(module_name: str, method: str, **kwargs) -> str:
+    """Safely load context from a Rook 2.0 module. Returns empty string on any error."""
+    try:
+        mod = __import__(f"rook.core.{module_name}", fromlist=[module_name])
+        # Get the singleton (module-level object with same name or standard names)
+        obj = None
+        for attr_name in [module_name, module_name.split("_")[0], "graph", "emotions", "meta"]:
+            obj = getattr(mod, attr_name, None)
+            if obj and callable(getattr(obj, method, None)):
+                break
+        if obj is None:
+            return ""
+        return getattr(obj, method)(**kwargs) or ""
+    except Exception as e:
+        logger.debug(f"Context load [{module_name}.{method}]: {e}")
+        return ""
+
+
+def _safe_load_discovery() -> str:
+    """Safely load recent discoveries context."""
+    try:
+        from rook.services.discovery import discovery
+        return discovery.get_recent_discoveries(limit=3) or ""
+    except Exception as e:
+        logger.debug(f"Discovery context load: {e}")
+        return ""
+
+
 def build_system_prompt() -> str:
     """Build system prompt with dynamic context."""
     now = datetime.now().strftime("%Y-%m-%d %H:%M (%A)")
@@ -51,6 +79,14 @@ def build_system_prompt() -> str:
 
     # Soul (user-editable personality)
     soul = _load_soul()
+
+    # ── New Rook 2.0 context blocks ──
+    emotional_ctx = _safe_load("emotional_memory", "get_emotional_context")
+    meta_brief = _safe_load("metacognition", "get_metacognitive_brief")
+    graph_ctx = _safe_load("graph_memory", "format_for_prompt", max_items=10)
+    discovery_ctx = _safe_load_discovery()
+
+    extra_blocks = "\n".join(b for b in [emotional_ctx, meta_brief, graph_ctx, discovery_ctx] if b)
 
     if soul:
         prompt = f"""{soul}
@@ -83,4 +119,6 @@ Rules:
 - For complex tasks, think step by step but keep the final answer short.
 - If you can't do something, say so directly.
 """
+    if extra_blocks:
+        prompt += f"\n{extra_blocks}\n"
     return prompt

@@ -2,6 +2,45 @@
 
 All notable changes to Rook will be documented in this file.
 
+## [2.0.0] — 2026-04-01
+
+### Added — Rook 2.0: Intelligence Layer
+
+- **Graph Memory** (`core/graph_memory.py`) — Entity-relation knowledge graph. Stores subject-predicate-object triples with confidence scoring. Upsert on duplicate, full-text search, prompt injection.
+- **Emotional Memory** (`core/emotional_memory.py`) — Tracks valence/arousal/dominance per session via regex-based structural analysis (zero API cost). Session consolidation into persistent imprints. Mode detection (focused/playful/stressed/deep_talk). Quote book. Czech + English emotion patterns.
+- **Metacognition** (`core/metacognition.py`) — Bayesian confidence tracking per domain using Beta distribution. Records task outcomes, estimates confidence with credible intervals, generates calibration reports. Rook knows what it's good at.
+- **Self-Improvement** (`skills/builtin/self_improve_skill.py`) — Rook reads, analyzes, and proposes changes to its own source code. Full pipeline: read_source → propose_change → diff → /approve or /reject → py_compile check → git commit. Safety: path sandboxing (rook/ only), max 3/day, rollback on failure.
+- **Knowledge Broker** (`core/knowledge_broker.py`) — Trust system for A2A communication. Default trust 0.3, adjustable by exchange quality. Outgoing sanitization (API keys, emails, phone numbers). Incoming injection detection. Rate limiting per agent.
+- **A2A Communication** (`core/a2a.py`) — Google A2A protocol (JSON-RPC 2.0 over HTTP). Agent card at `/.well-known/agent.json`. Peer discovery, registration, outgoing/incoming message handling. Trust-gated via Knowledge Broker. Proactive outreach scheduler.
+- **Proactive Discovery** (`services/discovery.py`) — RSS feed scanning 4×/day. Relevance scoring via LLM classify (FREE). Max 3 notifications/day. Default sources: Hacker News, Ars Technica, r/LocalLLaMA. User can add/remove sources.
+- **47 new tests** (`tests/test_rook2.py`) — Comprehensive coverage for all 7 new modules.
+
+### Changed
+
+- `core/db.py`: 8 new tables — knowledge_graph, emotional_imprints, emotional_quotes, metacognition, capability_log, a2a_peers, a2a_exchanges, discovery_items, discovery_sources. Indexes on knowledge_graph subject/object.
+- `services/prompt.py`: System prompt now injects emotional context, metacognitive brief, knowledge graph, and recent discoveries. Safe loading with graceful fallback.
+- `services/scheduler.py`: Added discovery job (4×/day at 6:00, 10:00, 14:00, 18:00) and emotional consolidation (daily at 23:00).
+
+### Architecture
+
+```
+Transport (Telegram/MCP)
+    ↓
+Router (Orchestrator — agentic tool loop)
+    ↓
+Skills (calendar, email, memory, spotify, self_improve, ...)
+    ↓
+Intelligence Layer [NEW]
+    ├── Emotional Memory (session tracking, imprints)
+    ├── Graph Memory (entity-relation triples)
+    ├── Metacognition (Bayesian confidence)
+    ├── Knowledge Broker (trust, sanitization)
+    ├── A2A (peer communication)
+    └── Discovery (RSS scanning)
+    ↓
+Core (Config, DB, LLM, Events, Memory)
+```
+
 ## [0.2.1] — 2026-03-25
 
 ### Fixed

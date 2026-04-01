@@ -64,6 +64,22 @@ def start_scheduler():
         name="Heartbeat",
     )
 
+    # Discovery — 4× daily (6:00, 10:00, 14:00, 18:00)
+    _scheduler.add_job(
+        _run_discovery,
+        CronTrigger(hour="6,10,14,18", minute=0),
+        id="discovery",
+        name="Proactive discovery",
+    )
+
+    # Emotional consolidation — once daily at 23:00
+    _scheduler.add_job(
+        _consolidate_emotions,
+        CronTrigger(hour=23, minute=0),
+        id="emotional_consolidation",
+        name="Emotional consolidation",
+    )
+
     _scheduler.start()
     logger.info(f"Scheduler started (TZ: {cfg.timezone})")
 
@@ -290,3 +306,25 @@ async def _heartbeat():
 
     except Exception as e:
         logger.error(f"Heartbeat LLM error: {e}")
+
+
+async def _run_discovery():
+    """Run proactive content discovery."""
+    logger.debug("Running discovery scan")
+    try:
+        from rook.services.discovery import discovery
+        await discovery.run_discovery()
+    except Exception as e:
+        logger.error(f"Discovery error: {e}")
+
+
+async def _consolidate_emotions():
+    """Consolidate daily emotional session into imprint."""
+    logger.debug("Consolidating emotional session")
+    try:
+        from rook.core.emotional_memory import emotions
+        result = emotions.consolidate_session()
+        if result:
+            logger.info(f"Emotional imprint #{result} created")
+    except Exception as e:
+        logger.error(f"Emotional consolidation error: {e}")
