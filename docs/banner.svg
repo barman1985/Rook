@@ -1,19 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 120" width="480" height="120">
   <!-- Icon -->
   <rect x="10" y="10" width="100" height="100" rx="20" fill="#1a1a1a"/>
-  <g transform="translate(60, 18)">
-    <rect x="-20" y="0" width="10" height="15" fill="#f97316"/>
-    <rect x="-5" y="0" width="10" height="15" fill="#f97316"/>
-    <rect x="10" y="0" width="10" height="15" fill="#f97316"/>
-    <rect x="-23" y="18" width="46" height="5" fill="#f97316"/>
-    <polygon points="-17,27 -12,58 12,58 17,27" fill="#f97316"/>
-    <rect x="-16" y="32" width="32" height="2.5" fill="#1a1a1a"/>
-    <rect x="-15" y="39" width="30" height="2.5" fill="#1a1a1a"/>
-    <rect x="-14" y="46" width="28" height="2.5" fill="#1a1a1a"/>
-    <polygon points="-14,62 -24,70 24,70 14,62" fill="#f97316"/>
-    <rect x="-25" y="73" width="50" height="7" fill="#f97316"/>
+  <g transform="translate(60, 20)">
+    <rect x="-18" y="0" width="9" height="16" fill="#f97316"/>
+    <rect x="-4.5" y="0" width="9" height="16" fill="#f97316"/>
+    <rect x="9" y="0" width="9" height="16" fill="#f97316"/>
+    <rect x="-21" y="19" width="42" height="5" fill="#f97316"/>
+    <polygon points="-15,28 -11,55 11,55 15,28" fill="#f97316"/>
+    <polygon points="-12,59 -21,66 21,66 12,59" fill="#f97316"/>
+    <rect x="-23" y="70" width="46" height="7" fill="#f97316"/>
   </g>
   <!-- Wordmark -->
   <text x="130" y="68" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="52" font-weight="600" fill="#1a1a1a">Rook</text>
+  <text x="280" y="68" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="28" font-weight="300" fill="#f97316">2.0</text>
   <text x="132" y="92" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="14" font-weight="400" fill="#f97316" letter-spacing="3">STRATEGIC AI</text>
 </svg>
